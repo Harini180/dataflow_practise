@@ -1,0 +1,59 @@
+{
+	"name": "dataflowaggreagtion",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "student_list_csv_file",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "sink_output_directory",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "aggregatedeptwise"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          sid as string,",
+				"          sname as string,",
+				"          sdept as string,",
+				"          scourse as string,",
+				"          sedu_dept as string,",
+				"          scity as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 aggregate(groupBy(sdept,",
+				"          scourse),",
+				"     sid = count(sid)) ~> aggregatedeptwise",
+				"aggregatedeptwise sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['total_stude_dept_wise.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     mapColumn(",
+				"          {department name} = sdept,",
+				"          {total number of students} = sid,",
+				"          scourse",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}
